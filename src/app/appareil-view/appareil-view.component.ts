@@ -15,7 +15,7 @@ export class AppareilViewComponent implements OnInit {
       () => {
         resolve(date);
 
-      }, 1000
+      }, 2000
     );
   });
   appareil: any[];
