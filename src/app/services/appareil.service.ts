@@ -1,29 +1,16 @@
-export  class  AppareilService {
-  appareil = [
-    {
-      id: 1,
-      name: 'Machine a laver',
-      status: 'Eteint'
-    },
-    {
-      id: 2,
-      name: 'Fer a repasser',
-      status: 'En panne'
-    },{
-      name: 'television',
-      status: 'Allumer'
-    },
-    {
-      id: 3,
-      name: 'Machine a cafe',
-      status: 'Eteint'
-    },
-    {
-      id: 4,
-      name: 'ordinateur',
-      status: 'Allumer'
-    },
-  ];
+import {Subject} from 'rxjs';
+import { HttpClient} from '@angular/common/http';
+import {Injectable} from '@angular/core';
+
+@Injectable()
+export class AppareilService {
+appareilSubject = new Subject<any[]>();
+   private appareil = [];
+  constructor(private  httpClient: HttpClient){}
+  emitAppareilSubject(){
+    this.appareilSubject.next(this.appareil.slice());
+  }
+
   getAppareilByID(id: number){
     const appar = this.appareil.find(
       (appareilObject) => {
@@ -32,21 +19,80 @@ export  class  AppareilService {
     );
     return appar;
   }
-  switchOnAll(){
-    for (let apparei of this.appareil) {
-      apparei.status='Allumer';
+
+
+  switchOnAll() {
+    for(let appareil of this.appareil) {
+      appareil.status = 'Allumer';
     }
+    this.emitAppareilSubject();
   }
+
   switchOffAll() {
-    for (let apparei of this.appareil) {
-      apparei.status = 'Eteint';
+    for(let appareil of this.appareil) {
+      appareil.status = 'Eteint';
     }
+    this.emitAppareilSubject();
+
   }
-  switchOnOne(index: number){
-    this.appareil[index].status='Allumer';
+  switchPanneAll() {
+    for(let appareil of this.appareil) {
+      appareil.status = 'En panne';
+    }
+    this.emitAppareilSubject();
+
   }
-  switchOnOff(index: number){
-    this.appareil[index].status='Eteint';
+
+  switchOnOne(i: number) {
+    this.appareil[i].status = 'Allumer';
+    this.emitAppareilSubject();
+
+  }
+
+  switchOffOne(i: number) {
+    this.appareil[i].status = 'Eteint';
+    this.emitAppareilSubject();
+
+  }
+  switchPanneOne(i: number) {
+    this.appareil[i].status = 'En panne';
+    this.emitAppareilSubject();
+
+  }
+  addAppareil(name: string, status: string){
+    const appareilObject = {
+      id: 0,
+      name: '',
+      status: '',
+    };
+    appareilObject.name = name;
+    appareilObject.status = status;
+    appareilObject.id = this.appareil[(this.appareil.length- 1)].id + 1;
+
+    this.appareil.push(appareilObject);
+    this.emitAppareilSubject();
+  }
+  saveAppareilsToServer(){
+    this.httpClient.put('https://http-client-demo-9b531.firebaseio.com/appareils.json',this.appareil).subscribe(
+      () => {
+        console.log('Enregistrerment termine |');
+      },
+      (error) => {
+        console.log('Erreur de sauvegarde a la bdd '+ error);
+      }
+    )
+  }
+  getAppareilsFromServer(){
+    this.httpClient.get<any[]>('https://http-client-demo-9b531.firebaseio.com/appareils.json')
+      .subscribe(
+        (response) => {
+          this.appareil = response;
+          this.emitAppareilSubject();
+        },
+        (error) => {
+          console.log('Erreur de chargement des donnees du serveur '+ error);
+        }
+      );
   }
 
 }

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import {AppareilService} from '../services/appareil.service';
+import { AppareilService } from '../services/appareil.service';
+import {Subscription} from 'rxjs';
 
 @Component({
   selector: 'app-appareil-view',
@@ -8,36 +9,48 @@ import {AppareilService} from '../services/appareil.service';
 })
 export class AppareilViewComponent implements OnInit {
 
-  isAuth = false;
+  appareil: any[];
+  appareilSubscription: Subscription;
+
   lastUpdate = new Promise((resolve, reject) => {
     const date = new Date();
     setTimeout(
       () => {
         resolve(date);
-
       }, 2000
     );
   });
-  appareil: any[];
 
-  //injection dans le constructeur
-  constructor(private  appareilService: AppareilService) {
-    setTimeout(
-      () => {
-        this.isAuth = true;
-      }, 4000
+  constructor(private appareilService: AppareilService) { }
+
+  ngOnInit() {
+    this.appareilSubscription = this.appareilService.appareilSubject.subscribe(
+      (appareil: any[]) =>{
+        this.appareil = appareil;
+    }
     );
+    this.appareilService.emitAppareilSubject();
   }
-  ngOnInit(){
-    this.appareil = this.appareilService.appareil;
-  }
+
   onAllumer() {
     this.appareilService.switchOnAll();
-    console.log('On allume tout !');
   }
-  onEteindre(){
-    this.appareilService.switchOffAll();
-    console.log('On eteint tout !');
+
+  onEteindre() {
+    if(confirm('Etes-vous sûr de vouloir éteindre tous vos appareils ?')) {
+      this.appareilService.switchOffAll();
+    } else {
+      return null;
+    }
+  }
+  onPanne(){
+    this.appareilService.switchPanneAll();
+  }
+  onSave(){
+    this.appareilService.saveAppareilsToServer();
+  }
+  onFetch(){
+    this.appareilService.getAppareilsFromServer();
   }
 
 }
